@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = "https://subacrildly-lithe-rosamaria.ngrok-free.dev/ask"
+API_URL = "https://subacrildy-lithe-rosamaria.ngrok-free.dev/ask/"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
@@ -77,15 +77,19 @@ if st.button("Ask"):
 
         with st.spinner("Thinking..."):
             try:
-                headers = {
-                    "Content-Type": "application/json",
-                    "ngrok-skip-browser-warning": "true"
-                }
+                res = requests.post(
+                    API_URL,
+                    json={"question": question},
+                    headers={"ngrok-skip-browser-warning": "69420"},  # ⭐关键修复
+                    timeout=20
+                )
 
-                res = requests.post(API_URL, headers=headers, json={"question": question})
-                
-                # 如果返回的不是 JSON，这里会直接报错
-                data = res.json()
+                # 返回的不是 JSON → 报错
+                try:
+                    data = res.json()
+                except Exception:
+                    st.error("❌ API 返回的不是 JSON，请检查 ngrok 是否在线。")
+                    st.stop()
 
                 answer = data.get("answer", "")
                 docs = data.get("retrieved_docs", [])
@@ -95,10 +99,8 @@ if st.button("Ask"):
 
                 st.rerun()
 
-            except json.JSONDecodeError:
-                st.error("❌ API 返回的不是 JSON，请检查 API_URL 或 ngrok 是否仍然在线。")
             except Exception as e:
-                st.error(f"Error calling API: {e}")
+                st.error(f"❌ API 调用失败：{e}")
 
 # ------------------ RAG 文档区 ------------------
 st.subheader("📚 Retrieved Documents")
