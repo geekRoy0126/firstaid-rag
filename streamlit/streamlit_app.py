@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = "https://subacrildy-lithe-rosamaria.ngrok-free.dev/ask"
+API_URL = "https://subacrildly-lithe-rosamaria.ngrok-free.dev/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
@@ -73,23 +73,30 @@ if st.button("Ask"):
     if not question.strip():
         st.warning("Please enter a question.")
     else:
-        # 用户消息
         st.session_state.messages.append({"role": "user", "content": question})
 
         with st.spinner("Thinking..."):
             try:
-                res = requests.post(API_URL, json={"question": question})
+                headers = {
+                    "Content-Type": "application/json",
+                    "ngrok-skip-browser-warning": "true"
+                }
+
+                res = requests.post(API_URL, headers=headers, json={"question": question})
+                
+                # 如果返回的不是 JSON，这里会直接报错
                 data = res.json()
 
                 answer = data.get("answer", "")
                 docs = data.get("retrieved_docs", [])
 
-                # 保存 AI 回答
                 st.session_state.messages.append({"role": "assistant", "content": answer})
                 st.session_state.docs = docs
 
                 st.rerun()
 
+            except json.JSONDecodeError:
+                st.error("❌ API 返回的不是 JSON，请检查 API_URL 或 ngrok 是否仍然在线。")
             except Exception as e:
                 st.error(f"Error calling API: {e}")
 
@@ -108,3 +115,4 @@ if "docs" in st.session_state:
                 """,
                 unsafe_allow_html=True,
             )
+
