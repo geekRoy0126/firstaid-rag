@@ -58,7 +58,7 @@ html_code = """
 </div>
 
 <script>
-const API_URL = "https://map-disclosure-honey-howard.trycloudflare.com/ask";
+const API_URL = "https://pac-games-differ-darwin.trycloudflare.com/ask";
 
 function scrollBottom() {
     const container = document.getElementById("chat-container");
