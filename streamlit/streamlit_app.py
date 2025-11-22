@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="First Aid Assistant", page_icon="🚑", layout="wide")
 
 st.markdown(
-    "<h1 style='text-align:center;color:#ff4d4f;'>🚑 First Aid Assistant</h1>",
+    "<h1 style='text-align:center; color:#d32f2f;'>🚑 First Aid Assistant</h1>",
     unsafe_allow_html=True
 )
 
@@ -17,9 +17,9 @@ html_code = """
 
 <style>
     body {
-        background: #000000;
+        background: #ffffff;
         font-family: Inter, sans-serif;
-        color: white;
+        color: #333333;
         margin: 0;
         padding: 0;
     }
@@ -47,21 +47,23 @@ html_code = """
         to { opacity: 1; }
     }
     @keyframes slideUp {
-        from { transform: translateY(20px); }
+        from { transform: translateY(12px); }
         to { transform: translateY(0); }
     }
 
     .user {
-        background: #2b2b2b;
+        background: #e8e8e8;
+        color: #333333;
         margin-left: auto;
-        border: 1px solid #3a3a3a;
+        border: 1px solid #cccccc;
         animation: slideRight 0.4s ease-out;
     }
 
     .bot {
-        background: #1a1a1a;
-        border-left: 4px solid #ff4d4f;
-        border: 1px solid #2a2a2a;
+        background: #f5f5f5;
+        border-left: 4px solid #d32f2f;
+        border: 1px solid #dddddd;
+        color: #333333;
         animation: slideLeft 0.4s ease-out;
     }
 
@@ -77,16 +79,21 @@ html_code = """
     #input-box {
         width: 80%;
         padding: 14px;
-        background: #1a1a1a;
-        border: 1px solid #333;
-        color: white;
+        background: #fafafa;
+        border: 1px solid #cccccc;
+        color: #333333;
         border-radius: 12px;
         outline: none;
+        font-size: 16px;
+    }
+    #input-box:focus {
+        border-color: #d32f2f;
+        box-shadow: 0 0 6px rgba(211, 47, 47, 0.3);
     }
 
     #send-btn {
         padding: 14px 22px;
-        background: #ff4d4f;
+        background: #d32f2f;
         border: none;
         color: white;
         font-size: 16px;
@@ -95,9 +102,8 @@ html_code = """
         cursor: pointer;
         font-weight: bold;
     }
-
     #send-btn:hover {
-        background: #ff6666;
+        background: #e04343;
     }
 
     /* typing dots */
@@ -106,7 +112,6 @@ html_code = """
         20% { opacity: 1; }
         100% { opacity: .2; }
     }
-
     .typing {
         display: inline-block;
         width: 50px;
