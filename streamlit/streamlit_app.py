@@ -19,46 +19,49 @@ body {
     background-color: #e5ddd5 !important;
 }
 
-/* 聊天容器 */
+/* 聊天容器（调小高度 + 自动滚动） */
 .chat-container {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 10px;
-    height: 600px;
+    gap: 10px;
+    padding: 12px 16px;
+    height: 450px;              /* 原来 600 太大了，改成更合适 */
     overflow-y: auto;
     background: #fafafa;
-    border-radius: 10px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
 }
 
-/* 通用气泡 */
+/* 通用气泡 - 限制宽度，不让铺满一整行 */
 .chat-bubble {
     padding: 10px 14px;
     border-radius: 14px;
-    max-width: 70%;
+    max-width: 60%;             /* ⭐ 改成 60%，自然居左/居右，看起来像聊天 */
     font-size: 15px;
     line-height: 1.5;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.12);
 }
 
-/* 用户（右侧，绿色） */
+/* 用户（右侧，绿色泡泡） */
 .user-bubble {
     background: #dcf8c6;
     margin-left: auto;
 }
 
-/* 机器人（左侧，白色） */
+/* AI（左侧，白色泡泡） */
 .bot-bubble {
     background: #ffffff;
     margin-right: auto;
 }
 
-/* 左栏标题 */
+/* 顶部标题美化 */
 .main-title {
     text-align: center;
     color: #075E54;
     font-weight: bold;
+    margin-top: 10px;
     margin-bottom: 1rem;
+    font-size: 32px;
 }
 </style>
 """
