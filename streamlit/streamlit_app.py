@@ -1,154 +1,116 @@
 import streamlit as st
 import requests
 import json
+import time
 
-# ------------------ Cloudflare Tunnel ------------------
+# ------------------ BACKEND URL (已替换) ------------------
 API_URL = "https://map-disclosure-honey-howard.trycloudflare.com/ask"
 
-st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(
+    page_title="First Aid Assistant",
+    page_icon="🚑",
+    layout="centered",
+)
 
-# ------------------ Dark Mode CSS ------------------
+# ------------------ DARK THEME CSS ------------------
 dark_css = """
 <style>
-/* 全局背景 */
-body, .main {
-    background-color: #0d1117 !important;
-    color: #e6edf3 !important;
-}
-
-/* 输入框背景 */
-textarea, input {
-    background-color: #161b22 !important;
-    color: #e6edf3 !important;
-    border-radius: 10px !important;
-    border: 1px solid #30363d !important;
-}
-
-/* 按钮样式 */
-button[kind="primary"] {
-    background-color: #238636 !important;
-    color: white !important;
-    border-radius: 8px !important;
-    font-size: 16px !important;
-    border: none !important;
-}
-button[kind="primary"]:hover {
-    background-color: #2ea043 !important;
-}
-
-/* 标题 */
-.title {
-    text-align: center;
-    margin-top: 30px;
-    color: #58a6ff;
-    font-weight: 700;
-}
-
-/* 聊天气泡基础样式 */
-.chat-bubble {
-    padding: 14px 18px;
-    border-radius: 18px;
-    margin: 10px 0;
-    max-width: 80%;
-    line-height: 1.6;
-    font-size: 17px;
-    animation: fadeIn 0.3s ease;
-}
-
-/* 用户气泡（右对齐） */
-.user-bubble {
-    background: #238636;
-    color: #ffffff;
-    margin-left: auto;
-    border: 1px solid #2ea043;
-}
-
-/* AI 气泡（左对齐） */
-.ai-bubble {
-    background: #161b22;
-    color: #e6edf3;
-    border: 1px solid #30363d;
-    margin-right: auto;
-}
-
-/* 文档块 */
-.doc-block {
-    background: #161b22;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #30363d;
-    margin-bottom: 10px;
-    color: #e6edf3;
-}
-
-/* 动画 */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+    body {
+        background-color: #000000 !important;
+    }
+    .main {
+        background-color: #000000;
+        color: #ffffff;
+    }
+    .stTextArea textarea {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border-radius: 10px;
+        border: 1px solid #333333;
+    }
+    .bubble {
+        padding: 12px 18px;
+        border-radius: 16px;
+        margin: 8px 0;
+        max-width: 80%;
+        line-height: 1.5;
+        font-size: 16px;
+        display: inline-block;
+    }
+    .user-bubble {
+        background-color: #2b2b2b;
+        color: #d9d9d9;
+        margin-left: auto;
+        border: 1px solid #3a3a3a;
+    }
+    .ai-bubble {
+        background-color: #1a1a1a;
+        border-left: 4px solid #ff4d4f;
+        border: 1px solid #2a2a2a;
+        color: #e6e6e6;
+    }
+    .stButton>button {
+        background-color: #ff4d4f;
+        color: white;
+        border-radius: 10px;
+        padding: 10px 20px;
+        border: none;
+        font-weight: 600;
+    }
+    .stButton>button:hover {
+        background-color: #ff6666;
+        transition: 0.2s;
+    }
 </style>
 """
 st.markdown(dark_css, unsafe_allow_html=True)
 
-# ------------------ 页面标题 ------------------
-st.markdown("<h1 class='title'>🚑 First Aid RAG Assistant</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#8b949e;'>Ask any first-aid related question. Powered by your local RAG system.</p>", unsafe_allow_html=True)
+# ------------------ TITLE ------------------
+st.markdown(
+    "<h1 style='text-align:center; color:#ff4d4f;'>🚑 First Aid Assistant</h1>",
+    unsafe_allow_html=True
+)
 
-# ------------------ 聊天历史 ------------------
+# ------------------ CHAT HISTORY ------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 展示历史聊天
+# Display past messages
 for msg in st.session_state.messages:
-    bubble = "user-bubble" if msg["role"] == "user" else "ai-bubble"
-    st.markdown(f"<div class='chat-bubble {bubble}'>{msg['content']}</div>", unsafe_allow_html=True)
+    role = msg["role"]
+    bubble_class = "user-bubble" if role == "user" else "ai-bubble"
+    st.markdown(
+        f"<div class='bubble {bubble_class}'>{msg['content']}</div>",
+        unsafe_allow_html=True
+    )
 
-# ------------------ 输入栏 ------------------
-question = st.text_area("Your question:", height=80, key="input_area")
+# ------------------ INPUT ------------------
+user_input = st.text_area("Describe your symptoms or ask a first-aid question:", height=80)
 
-if st.button("Ask"):
-    if not question.strip():
-        st.warning("Please enter a question.")
-    else:
-        # 用户消息
-        st.session_state.messages.append({"role": "user", "content": question})
+if st.button("Send"):
+    if user_input.strip():
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.markdown(
+            f"<div class='bubble user-bubble'>{user_input}</div>",
+            unsafe_allow_html=True
+        )
 
-        with st.spinner("Thinking..."):
+        # Call backend
+        with st.spinner("Analyzing symptoms..."):
             try:
-                res = requests.post(API_URL, json={"question": question}, timeout=15)
-
-                if res.status_code != 200:
-                    st.error(f"❌ API Error: {res.status_code}")
-                    st.error(res.text)
-                else:
-                    data = res.json()
-
-                    answer = data.get("answer", "No answer returned.")
-                    docs = data.get("retrieved_docs", [])
-
-                    # AI 回复
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                    st.session_state.docs = docs
-
-                st.rerun()
-
+                res = requests.post(API_URL, json={"question": user_input})
+                data = res.json()
+                answer = data.get("answer", "No answer returned.")
             except Exception as e:
-                st.error(f"❌ Error calling API: {e}")
+                answer = f"⚠️ Cannot reach server.\n\n{e}"
 
-# ------------------ RAG 文档显示区 ------------------
-st.subheader("📚 Retrieved Documents")
-
-if "docs" in st.session_state:
-    for i, d in enumerate(st.session_state.docs, start=1):
-        with st.expander(f"Document {i}  (score={d['score']:.4f})"):
-            st.markdown(
-                f"""
-                <div class='doc-block'>
-                    <strong>Q:</strong> {d['q']}<br><br>
-                    <strong>A:</strong> {d['a']}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        # Add AI message
+        st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.markdown(
+            f"<div class='bubble ai-bubble'>{answer}</div>",
+            unsafe_allow_html=True
+        )
 
 
