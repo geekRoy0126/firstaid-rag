@@ -1,117 +1,154 @@
 import streamlit as st
 import requests
 import json
-import time
 
-# 💡 使用你的 ngrok 端点（保持 /ask）
+# ------------------ Cloudflare Tunnel ------------------
 API_URL = "https://map-disclosure-honey-howard.trycloudflare.com/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
-# ------------------ Custom CSS ------------------
-chat_css = """
+# ------------------ Dark Mode CSS ------------------
+dark_css = """
 <style>
-body {
-    background-color: #f7f9fc !important;
+/* 全局背景 */
+body, .main {
+    background-color: #0d1117 !important;
+    color: #e6edf3 !important;
 }
 
-.chat-bubble {
-    padding: 12px 18px;
-    border-radius: 16px;
-    margin: 8px 0;
-    max-width: 80%;
-    line-height: 1.5;
-    font-size: 16px;
+/* 输入框背景 */
+textarea, input {
+    background-color: #161b22 !important;
+    color: #e6edf3 !important;
+    border-radius: 10px !important;
+    border: 1px solid #30363d !important;
 }
 
-.user-bubble {
-    background-color: #e3f2fd;
-    color: #0d47a1;
-    margin-left: auto;
-    border: 1px solid #bbdefb;
+/* 按钮样式 */
+button[kind="primary"] {
+    background-color: #238636 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    border: none !important;
+}
+button[kind="primary"]:hover {
+    background-color: #2ea043 !important;
 }
 
-.ai-bubble {
-    background-color: #f1f8e9;
-    color: #33691e;
-    margin-right: auto;
-    border: 1px solid #dcedc8;
-}
-
+/* 标题 */
 .title {
     text-align: center;
-    margin-top: 40px;
+    margin-top: 30px;
+    color: #58a6ff;
+    font-weight: 700;
 }
 
+/* 聊天气泡基础样式 */
+.chat-bubble {
+    padding: 14px 18px;
+    border-radius: 18px;
+    margin: 10px 0;
+    max-width: 80%;
+    line-height: 1.6;
+    font-size: 17px;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 用户气泡（右对齐） */
+.user-bubble {
+    background: #238636;
+    color: #ffffff;
+    margin-left: auto;
+    border: 1px solid #2ea043;
+}
+
+/* AI 气泡（左对齐） */
+.ai-bubble {
+    background: #161b22;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    margin-right: auto;
+}
+
+/* 文档块 */
 .doc-block {
-    background: #fff;
+    background: #161b22;
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid #eee;
-    margin-bottom: 8px;
+    border: 1px solid #30363d;
+    margin-bottom: 10px;
+    color: #e6edf3;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 """
-st.markdown(chat_css, unsafe_allow_html=True)
+st.markdown(dark_css, unsafe_allow_html=True)
 
 # ------------------ 页面标题 ------------------
 st.markdown("<h1 class='title'>🚑 First Aid RAG Assistant</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;'>Ask any first-aid related question. Your local RAG system will retrieve documents and respond.</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#8b949e;'>Ask any first-aid related question. Powered by your local RAG system.</p>", unsafe_allow_html=True)
 
 # ------------------ 聊天历史 ------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 显示历史消息
+# 展示历史聊天
 for msg in st.session_state.messages:
-    bubble_class = "user-bubble" if msg["role"] == "user" else "ai-bubble"
-    st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
+    bubble = "user-bubble" if msg["role"] == "user" else "ai-bubble"
+    st.markdown(f"<div class='chat-bubble {bubble}'>{msg['content']}</div>", unsafe_allow_html=True)
 
 # ------------------ 输入栏 ------------------
-question = st.text_area("Your question:", height=80)
+question = st.text_area("Your question:", height=80, key="input_area")
 
 if st.button("Ask"):
     if not question.strip():
         st.warning("Please enter a question.")
     else:
+        # 用户消息
         st.session_state.messages.append({"role": "user", "content": question})
 
         with st.spinner("Thinking..."):
             try:
-                # 💡 关键修复：添加 ngrok 跳过浏览器提醒的 header
-                res = requests.post(
-                    API_URL,
-                    json={"question": question},
-                    headers={"ngrok-skip-browser-warning": "true"}
-                )
+                res = requests.post(API_URL, json={"question": question}, timeout=15)
 
-                # API 返回非 JSON 时，这行会报错 → 转交 except
-                data = res.json()
+                if res.status_code != 200:
+                    st.error(f"❌ API Error: {res.status_code}")
+                    st.error(res.text)
+                else:
+                    data = res.json()
 
-                answer = data.get("answer", "")
-                docs = data.get("retrieved_docs", [])
+                    answer = data.get("answer", "No answer returned.")
+                    docs = data.get("retrieved_docs", [])
 
-                st.session_state.messages.append({"role": "assistant", "content": answer})
-                st.session_state.docs = docs
+                    # AI 回复
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                    st.session_state.docs = docs
 
                 st.rerun()
 
             except Exception as e:
-                st.error(f"❌ API 返回的不是 JSON，请检查 API_URL 或 ngrok 是否仍然在线。\n\n错误信息：{e}")
+                st.error(f"❌ Error calling API: {e}")
 
-# ------------------ RAG 文档区 ------------------
+# ------------------ RAG 文档显示区 ------------------
 st.subheader("📚 Retrieved Documents")
 
 if "docs" in st.session_state:
     for i, d in enumerate(st.session_state.docs, start=1):
-        with st.expander(f"Document {i} (score={d['score']:.4f})"):
+        with st.expander(f"Document {i}  (score={d['score']:.4f})"):
             st.markdown(
                 f"""
                 <div class='doc-block'>
-                <strong>Q:</strong> {d['q']}<br><br>
-                <strong>A:</strong> {d['a']}
+                    <strong>Q:</strong> {d['q']}<br><br>
+                    <strong>A:</strong> {d['a']}
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
+
 
