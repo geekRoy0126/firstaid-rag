@@ -120,11 +120,8 @@ with chat_col:
         )
         st.session_state.docs = docs
 
-        # 清空输入框
-        st.session_state.user_input = ""
-
-        # 触发页面刷新以立即显示新内容
-        st.rerun()
+        # 👉 不再手动改 st.session_state.user_input，避免报错
+        # 也不强制 rerun，Streamlit 会自动刷新本次 run 的输出
 
 with docs_col:
     st.subheader("📚 Retrieved Documents")
