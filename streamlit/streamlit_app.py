@@ -1,149 +1,143 @@
 import streamlit as st
-import requests
-import json
-
-API_URL = "https://pac-games-differ-darwin.trycloudflare.com/ask"
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="First Aid Assistant", page_icon="🚑", layout="wide")
 
-# ------------------ STATE ------------------
-if "messages" not in st.session_state:
-    st.session_state.messages = []  # [{"role": "user"/"assistant", "content": str}]
-if "docs" not in st.session_state:
-    st.session_state.docs = []
+st.markdown(
+    "<h1 style='text-align:center; color:#d32f2f;'>🚑 First Aid Assistant</h1>",
+    unsafe_allow_html=True
+)
 
-# ------------------ CSS ------------------
-chat_css = """
-<style>
-body {
-    background-color: #f7f9fc !important;
-}
-
-/* 聊天容器 */
-.chat-container {
+html_code = """
+<div id="chat-wrapper" style="
+    width: 100%;
+    height: 650px;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+">
+
+    <div id="chat-container" style="
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    "></div>
+
+    <div style="
+        padding: 15px;
+        border-top: 1px solid #ddd;
+        display: flex;
+        background: #fafafa;
+    ">
+        <input id="input-box" placeholder="Describe symptoms or ask a first-aid question..." 
+            style="
+                flex: 1;
+                padding: 14px;
+                border-radius: 10px;
+                border: 1px solid #ccc;
+                font-size: 16px;
+            ">
+        <button id="send-btn" onclick="send()" 
+            style="
+                margin-left: 10px;
+                padding: 14px 20px;
+                background: #d32f2f;
+                color: white;
+                border-radius: 10px;
+                border: none;
+                font-weight: bold;
+                cursor: pointer;
+            ">
+            Send
+        </button>
+    </div>
+</div>
+
+<script>
+const API_URL = "https://map-disclosure-honey-howard.trycloudflare.com/ask";
+
+function scrollBottom() {
+    const container = document.getElementById("chat-container");
+    container.scrollTop = container.scrollHeight;
 }
 
-/* 通用气泡样式 */
-.chat-bubble {
-    padding: 12px 16px;
-    border-radius: 14px;
-    max-width: 80%;
-    line-height: 1.5;
-    font-size: 16px;
+function addUserMessage(text) {
+    const chat = document.getElementById("chat-container");
+    const div = document.createElement("div");
+    div.style.maxWidth = "70%";
+    div.style.margin = "8px 0";
+    div.style.padding = "12px 16px";
+    div.style.borderRadius = "14px";
+    div.style.background = "#e8e8e8";
+    div.style.alignSelf = "flex-end";
+    div.innerText = text;
+    chat.appendChild(div);
+    scrollBottom();
 }
 
-/* 用户气泡（右侧） */
-.user-bubble {
-    margin-left: auto;
-    background: #e3f2fd;
-    color: #0d47a1;
-    border: 1px solid #bbdefb;
+function addTyping() {
+    const chat = document.getElementById("chat-container");
+    const div = document.createElement("div");
+    div.id = "typing";
+    div.style.maxWidth = "70%";
+    div.style.margin = "8px 0";
+    div.style.padding = "12px 16px";
+    div.style.borderRadius = "14px";
+    div.style.background = "#f5f5f5";
+    div.style.borderLeft = "4px solid #d32f2f";
+    div.innerHTML = "Typing...";
+    chat.appendChild(div);
+    scrollBottom();
 }
 
-/* 机器人气泡（左侧） */
-.bot-bubble {
-    margin-right: auto;
-    background: #f5f5f5;
-    border-left: 4px solid #d32f2f;
-    color: #212121;
+function removeTyping() {
+    const t = document.getElementById("typing");
+    if (t) t.remove();
 }
 
-/* 顶部标题居中 */
-.main-title {
-    text-align: center;
-    color: #d32f2f;
-    margin-bottom: 1rem;
+function addBotMessage(text) {
+    const chat = document.getElementById("chat-container");
+    const div = document.createElement("div");
+    div.style.maxWidth = "70%";
+    div.style.margin = "8px 0";
+    div.style.padding = "12px 16px";
+    div.style.borderRadius = "14px";
+    div.style.background = "#f5f5f5";
+    div.style.borderLeft = "4px solid #d32f2f";
+    div.innerText = text;
+    chat.appendChild(div);
+    scrollBottom();
 }
-</style>
+
+async function send() {
+    const input = document.getElementById("input-box");
+    const text = input.value.trim();
+    if (!text) return;
+
+    addUserMessage(text);
+    input.value = "";
+
+    addTyping();
+
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: text })
+        });
+        const data = await res.json();
+        removeTyping();
+        addBotMessage(data.answer || "No response");
+    } catch (err) {
+        removeTyping();
+        addBotMessage("⚠️ Error contacting server.");
+    }
+}
+</script>
 """
-st.markdown(chat_css, unsafe_allow_html=True)
 
-# ------------------ TITLE ------------------
-st.markdown("<h1 class='main-title'>🚑 First Aid Assistant</h1>", unsafe_allow_html=True)
-
-# ------------------ LAYOUT ------------------
-chat_col, docs_col = st.columns([2, 1])
-
-with chat_col:
-    st.markdown("### 💬 Chat")
-
-    # 显示历史对话
-    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-    for msg in st.session_state.messages:
-        if msg["role"] == "user":
-            bubble_class = "user-bubble"
-        else:
-            bubble_class = "bot-bubble"
-
-        st.markdown(
-            f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>",
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # 输入栏
-    user_input = st.text_input(
-        "Describe symptoms or ask a first-aid question...",
-        key="user_input",
-        placeholder="e.g., I cut my finger and it's bleeding a bit. What should I do?",
-    )
-
-    send = st.button("Send", type="primary")
-
-    if send and user_input.strip():
-        question = user_input.strip()
-
-        # 1. 先把用户消息放进历史
-        st.session_state.messages.append(
-            {"role": "user", "content": question}
-        )
-
-        # 2. 调用后端接口
-        try:
-            with st.spinner("Assistant is thinking..."):
-                res = requests.post(API_URL, json={"question": question}, timeout=60)
-                res.raise_for_status()
-                data = res.json()
-        except Exception as e:
-            answer = f"❌ 后端出错：{e}"
-            docs = []
-        else:
-            answer = data.get("answer", "⚠️ 后端没有返回 answer 字段")
-            docs = data.get("retrieved_docs", [])
-
-        # 3. 保存机器人回复 & 文档
-        st.session_state.messages.append(
-            {"role": "assistant", "content": answer}
-        )
-        st.session_state.docs = docs
-
-        # 👉 不再手动改 st.session_state.user_input，避免报错
-        # 也不强制 rerun，Streamlit 会自动刷新本次 run 的输出
-
-with docs_col:
-    st.subheader("📚 Retrieved Documents")
-
-    docs = st.session_state.docs or []
-    if not docs:
-        st.info("当前还没有检索到文档。提一个问题试试？")
-    else:
-        for i, d in enumerate(docs, start=1):
-            score = d.get("score", 0.0)
-            q = d.get("q", "")
-            a = d.get("a", "")
-            with st.expander(f"Document {i} (score={score:.4f})"):
-                st.markdown(
-                    f"""
-                    <div style='background:#ffffff;
-                                padding:12px;
-                                border-radius:10px;
-                                border:1px solid #eee;'>
-                        <strong>Q:</strong> {q}<br><br>
-                        <strong>A:</strong> {a}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+components.html(html_code, height=750, scrolling=True)
