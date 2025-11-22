@@ -1,21 +1,24 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import json
+import requests
 
 st.set_page_config(page_title="First Aid Assistant", page_icon="🚑", layout="wide")
 
+# ------------------ TITLE ------------------
 st.markdown(
     "<h1 style='text-align:center; color:#d32f2f;'>🚑 First Aid Assistant</h1>",
     unsafe_allow_html=True
 )
 
-# 初始化 docs
+# ------------------ STATE ------------------
 if "docs" not in st.session_state:
     st.session_state.docs = []
 
 
-# ---------------- HTML UI（注意三引号完全封闭） ----------------
-html_code = """
+# ------------------ HTML CHAT UI ------------------
+
+html_code = f"""
 <div id="chat-wrapper" style="
     width: 100%;
     height: 650px;
@@ -40,7 +43,7 @@ html_code = """
         display: flex;
         background: #fafafa;
     ">
-        <input id="input-box" placeholder="Describe symptoms..." 
+        <input id="input-box" placeholder="Describe symptoms or ask a first-aid question..." 
             style="
                 flex: 1;
                 padding: 14px;
@@ -48,7 +51,7 @@ html_code = """
                 border: 1px solid #ccc;
                 font-size: 16px;
             ">
-        <button onclick="send()" 
+        <button id="send-btn" onclick="send()" 
             style="
                 margin-left: 10px;
                 padding: 14px 20px;
@@ -77,7 +80,7 @@ function addUserMessage(text) {
     const div = document.createElement("div");
     div.style.maxWidth = "70%";
     div.style.margin = "8px 0";
-    div.style.padding = "12px";
+    div.style.padding = "12px 16px";
     div.style.borderRadius = "14px";
     div.style.background = "#e8e8e8";
     div.style.alignSelf = "flex-end";
@@ -86,12 +89,32 @@ function addUserMessage(text) {
     scrollBottom();
 }
 
+function addTyping() {
+    const chat = document.getElementById("chat-container");
+    const div = document.createElement("div");
+    div.id = "typing";
+    div.style.maxWidth = "70%";
+    div.style.margin = "8px 0";
+    div.style.padding = "12px 16px";
+    div.style.borderRadius = "14px";
+    div.style.background = "#f5f5f5";
+    div.style.borderLeft = "4px solid #d32f2f";
+    div.innerHTML = "Typing...";
+    chat.appendChild(div);
+    scrollBottom();
+}
+
+function removeTyping() {
+    const t = document.getElementById("typing");
+    if (t) t.remove();
+}
+
 function addBotMessage(text) {
     const chat = document.getElementById("chat-container");
     const div = document.createElement("div");
     div.style.maxWidth = "70%";
     div.style.margin = "8px 0";
-    div.style.padding = "12px";
+    div.style.padding = "12px 16px";
     div.style.borderRadius = "14px";
     div.style.background = "#f5f5f5";
     div.style.borderLeft = "4px solid #d32f2f";
@@ -108,15 +131,20 @@ async function send() {
     addUserMessage(text);
     input.value = "";
 
+    addTyping();
+
     const res = await fetch(API_URL, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({question: text})
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text })
     });
+
     const data = await res.json();
+    removeTyping();
 
     addBotMessage(data.answer || "No response");
 
+    // Send docs back to Streamlit
     window.parent.postMessage(
         {type: "docs", payload: data.retrieved_docs || []},
         "*"
@@ -125,10 +153,14 @@ async function send() {
 </script>
 """
 
+# Render HTML UI
 components.html(html_code, height=750, scrolling=True)
 
 
-# JS → Streamlit 桥
+# ------------------ LISTEN FOR DOCS ------------------
+message = st.experimental_get_query_params()
+
+# JS → Streamlit bridge
 st.markdown("""
 <script>
 window.addEventListener("message", (event) => {
@@ -145,10 +177,12 @@ window.addEventListener("message", (event) => {
 """, unsafe_allow_html=True)
 
 
-# ---------------- 显示 Docs ----------------
+# ------------------ DISPLAY RETRIEVED DOCS ------------------
+
 st.subheader("📚 Retrieved Documents")
 
 docs = st.session_state.docs
+
 for i, d in enumerate(docs, start=1):
     with st.expander(f"Document {i} (score={d['score']:.4f})"):
         st.markdown(
