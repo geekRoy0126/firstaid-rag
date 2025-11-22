@@ -126,9 +126,14 @@ async function send() {
     try {
         const res = await fetch(API_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            mode: "cors",
+            credentials: "omit",
+            headers: {
+                "Content-Type": "text/plain"
+            },
             body: JSON.stringify({ question: text })
         });
+
         const data = await res.json();
         removeTyping();
         addBotMessage(data.answer || "No response");
