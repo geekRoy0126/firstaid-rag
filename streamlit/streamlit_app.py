@@ -4,7 +4,7 @@ import json
 import time
 
 # 💡 使用你的 ngrok 端点（保持 /ask）
-API_URL = "https://subacrildy-lithe-rosamaria.ngrok-free.dev/ask"
+API_URL = "https://map-disclosure-honey-howard.trycloudflare.com/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
