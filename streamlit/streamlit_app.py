@@ -3,7 +3,8 @@ import requests
 import json
 import time
 
-API_URL = "https://subacrildy-lithe-rosamaria.ngrok-free.dev/ask/"
+# 💡 使用你的 ngrok 端点（保持 /ask）
+API_URL = "https://subacrildy-lithe-rosamaria.ngrok-free.dev/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
@@ -61,7 +62,7 @@ st.markdown("<p style='text-align:center;'>Ask any first-aid related question. Y
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 显示历史消息气泡
+# 显示历史消息
 for msg in st.session_state.messages:
     bubble_class = "user-bubble" if msg["role"] == "user" else "ai-bubble"
     st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
@@ -77,19 +78,15 @@ if st.button("Ask"):
 
         with st.spinner("Thinking..."):
             try:
+                # 💡 关键修复：添加 ngrok 跳过浏览器提醒的 header
                 res = requests.post(
                     API_URL,
                     json={"question": question},
-                    headers={"ngrok-skip-browser-warning": "69420"},  # ⭐关键修复
-                    timeout=20
+                    headers={"ngrok-skip-browser-warning": "true"}
                 )
 
-                # 返回的不是 JSON → 报错
-                try:
-                    data = res.json()
-                except Exception:
-                    st.error("❌ API 返回的不是 JSON，请检查 ngrok 是否在线。")
-                    st.stop()
+                # API 返回非 JSON 时，这行会报错 → 转交 except
+                data = res.json()
 
                 answer = data.get("answer", "")
                 docs = data.get("retrieved_docs", [])
@@ -100,7 +97,7 @@ if st.button("Ask"):
                 st.rerun()
 
             except Exception as e:
-                st.error(f"❌ API 调用失败：{e}")
+                st.error(f"❌ API 返回的不是 JSON，请检查 API_URL 或 ngrok 是否仍然在线。\n\n错误信息：{e}")
 
 # ------------------ RAG 文档区 ------------------
 st.subheader("📚 Retrieved Documents")
