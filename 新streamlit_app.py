@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = https://deals-forming-folk-valium.trycloudflare.com/ask"
+API_URL = 'https://gardening-sie-canyon-moving.trycloudflare.com /ask'
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
@@ -113,3 +113,4 @@ else:
                 unsafe_allow_html=True,
 
             )
+
