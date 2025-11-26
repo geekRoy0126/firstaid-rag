@@ -222,3 +222,14 @@ with col_right:
                     )
         else:
             st.caption("No retrieved knowledge source found.")
+st.markdown(
+    """
+<div style='text-align: center; margin-top: 40px;'>
+    <span style='font-size: 0.9rem; color: #bbbbbb;'>
+        ⚠️ This assistant does not provide professional medical advice.<br>
+        In emergencies, please call local emergency services immediately.
+    </span>
+</div>
+""",
+    unsafe_allow_html=True
+)
