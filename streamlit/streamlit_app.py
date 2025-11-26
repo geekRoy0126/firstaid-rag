@@ -6,8 +6,11 @@ import time
 API_URL = " https://stored-yale-expectations-bangkok.trycloudflare.com/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="✚", layout="wide")
+st.markdown("<h1 class='title'>🚑 First Aid RAG Assistant</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>Ask any first-aid related question. Your local RAG system will retrieve documents and respond.</p>", unsafe_allow_html=True)
+st.divider()
 
-col_left, col_right = st.columns([7, 3])
+col_left, col_right = st.columns([8, 2])
 
 # ------------------ Custom CSS ------------------
 chat_css = """
@@ -151,8 +154,7 @@ body {
 st.markdown(chat_css, unsafe_allow_html=True)
 
 # ------------------ 页面标题 ------------------
-st.markdown("<h1 class='title'>🚑 First Aid RAG Assistant</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;'>Ask any first-aid related question. Your local RAG system will retrieve documents and respond.</p>", unsafe_allow_html=True)
+
 
 # ------------------ 聊天历史 ------------------
 with col_left:
