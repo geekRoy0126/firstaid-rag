@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = "http://host.docker.internal:8000/ask"
+API_URL = " https://stored-yale-expectations-bangkok.trycloudflare.com/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
