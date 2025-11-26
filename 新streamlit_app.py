@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = "http://host.docker.internal:8000/ask"
+API_URL = https://deals-forming-folk-valium.trycloudflare.com/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
@@ -111,4 +111,5 @@ else:
                 </div>
                 """,
                 unsafe_allow_html=True,
+
             )
