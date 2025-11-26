@@ -164,10 +164,11 @@ with col_left:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    st.markdown("<div style='max-width:92%; margin-left:0;'>", unsafe_allow_html=True)
     for msg in st.session_state.messages:
         bubble_class = "user-bubble" if msg["role"] == "user" else "ai-bubble"
         st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
-
+    st.markdown("</div>", unsafe_allow_html=True)
     if "question_box" not in st.session_state:
         st.session_state.question_box = ""
     if "clear_question" not in st.session_state:
