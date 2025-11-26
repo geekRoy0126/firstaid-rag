@@ -68,8 +68,6 @@ for msg in st.session_state.messages:
     st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
 
 # ------------------ 输入栏 ------------------
-# ================== 输入框初始化与清空逻辑 ==================
-
 # 初始化 question_box（输入框的 state）
 if "question_box" not in st.session_state:
     st.session_state.question_box = ""
@@ -111,7 +109,6 @@ if submitted:
                 answer = data.get("answer", "")
                 docs = data.get("retrieved_docs", [])
 
-                # 保存 AI 回答
                 st.session_state.messages.append({"role": "assistant", "content": answer})
                 st.session_state.docs = docs
 
@@ -121,37 +118,40 @@ if submitted:
                 st.error(f"Error calling API: {e}")
 
 # ------------------ RAG 文档区 ------------------
-st.subheader("📚 Retrieved Documents")
+
+messages = st.session_state.get("messages", [])
+# 只要有一条 user 消息，就说明已经问过问题
+has_asked = any(m.get("role") == "user" for m in messages)
 
 docs = st.session_state.get("docs", None)
-has_asked = st.session_state.get("has_asked", False)
 
-if docs:
-    # 有检索结果：正常展示
-    for i, d in enumerate(docs, start=1):
-        with st.expander(f"Document {i} • score={d.get('score', 0):.4f}"):
-            st.markdown(
-                f"""
-                <div class='doc-block'>
-                <strong>Q:</strong> {d.get('q', '')}<br><br>
-                <strong>A:</strong> {d.get('a', '')}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+if has_asked:
+    st.subheader("📚 Retrieved Documents")
 
-elif not has_asked:
-    # 还没问过任何问题：显示提示
-    st.caption("No documents were retrieved yet. Ask a question to see matches here.")
-
+    if docs:
+        for i, d in enumerate(docs, start=1):
+            with st.expander(f"Document {i} • score={d.get('score', 0):.4f}"):
+                st.markdown(
+                    f"""
+                    <div class='doc-block'>
+                    <strong>Q:</strong> {d.get('q', '')}<br><br>
+                    <strong>A:</strong> {d.get('a', '')}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+    else:
+        st.caption("No documents were retrieved for this question.")
 
 st.divider()
 st.markdown(
     """
-<span style='font-size: 0.85rem; color: #999;'>
-⚠️ This assistant does not provide professional medical advice.<br>
-In emergencies, call local emergency services immediately.
-</span>
+<div style='text-align: center; margin-top: 40px;'>
+    <span style='font-size: 0.9rem; color: #bbbbbb;'>
+        ⚠️ This assistant does not provide professional medical advice.<br>
+        In emergencies, please call local emergency services immediately.
+    </span>
+</div>
 """,
     unsafe_allow_html=True
 )
