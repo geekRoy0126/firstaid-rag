@@ -5,7 +5,9 @@ import time
 
 API_URL = " https://stored-yale-expectations-bangkok.trycloudflare.com/ask"
 
-st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
+st.set_page_config(page_title="First Aid RAG Assistant", page_icon="✚", layout="wide")
+
+col_left, col_right = st.columns([7, 3])
 
 # ------------------ Custom CSS ------------------
 chat_css = """
@@ -153,86 +155,68 @@ st.markdown("<h1 class='title'>🚑 First Aid RAG Assistant</h1>", unsafe_allow_
 st.markdown("<p style='text-align:center;'>Ask any first-aid related question. Your local RAG system will retrieve documents and respond.</p>", unsafe_allow_html=True)
 
 # ------------------ 聊天历史 ------------------
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+with col_left:
+    st.markdown(chat_css, unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#c62a2a;'>First-Aid Chat</h2>", unsafe_allow_html=True)
 
-for msg in st.session_state.messages:
-    bubble_class = "user-bubble" if msg["role"] == "user" else "ai-bubble"
-    st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-# ------------------ 输入栏 ------------------
-if "question_box" not in st.session_state:
-    st.session_state.question_box = ""
+    for msg in st.session_state.messages:
+        bubble_class = "user-bubble" if msg["role"] == "user" else "ai-bubble"
+        st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
 
-if "clear_question" not in st.session_state:
-    st.session_state.clear_question = False
+    if "question_box" not in st.session_state:
+        st.session_state.question_box = ""
+    if "clear_question" not in st.session_state:
+        st.session_state.clear_question = False
+    if st.session_state.clear_question:
+        st.session_state.question_box = ""
+        st.session_state.clear_question = False
 
-if st.session_state.clear_question:
-    st.session_state.question_box = ""
-    st.session_state.clear_question = False
+    with st.form("qa_form"):
+        question = st.text_area("Your question:", height=80, key="question_box")
+        submitted = st.form_submit_button("Ask")
 
-with st.form("qa_form"):
-    question = st.text_area("Your question:", height=80, key="question_box")
-    submitted = st.form_submit_button("Ask")
+    if submitted:
+        if not question.strip():
+            st.warning("Please enter a question.")
+        else:
+            st.session_state.clear_question=True
+            st.session_state.messages.append({"role":"user","content":question.strip()})
 
-# ---- When user submits ----
-if submitted:
-    if not question.strip():
-        st.warning("Please enter a question.")
-    else:
-        st.session_state.clear_question = True
-
-        st.session_state.messages.append({"role": "user", "content": question})
-
-        with st.spinner("Thinking..."):
-            try:
-                res = requests.post(API_URL, json={"question": question})
-                data = res.json()
-
-                answer = data.get("answer", "")
-                docs = data.get("retrieved_docs", [])
-
-                st.session_state.messages.append({"role": "assistant", "content": answer})
-                st.session_state.docs = docs
-                st.rerun()
-
-            except Exception as e:
-                st.error(f"Error calling API: {e}")
+            with st.spinner("Thinking..."):
+                try:
+                    res=requests.post(API_URL,json={"question":question.strip()})
+                    data=res.json()
+                    answer=data.get("answer","")
+                    docs=data.get("retrieved_docs",[])
+                    st.session_state.messages.append({"role":"assistant","content":answer})
+                    st.session_state.docs=docs
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error calling API: {e}")
 
 # ------------------ RAG 文档区 ------------------
-messages = st.session_state.get("messages", [])
-has_asked = any(m.get("role") == "user" for m in messages)
+with col_right:
+    st.markdown("<h2 style='color:#b71c1c;'>Retrieved Files</h2>", unsafe_allow_html=True)
 
-docs = st.session_state.get("docs", None)
+    messages = st.session_state.get("messages", [])
+    has_asked = any(m.get("role") == "user" for m in messages)
+    docs = st.session_state.get("docs", None)
 
-if has_asked:
-    st.subheader("📚 Retrieved Documents")
-
-    if docs:
-        for i, d in enumerate(docs, start=1):
-            with st.expander(f"Document {i} • score={d.get('score', 0):.4f}"):
-                st.markdown(
-                    f"""
-                    <div class='doc-block'>
-                    <strong>Q:</strong> {d.get('q', '')}<br><br>
-                    <strong>A:</strong> {d.get('a', '')}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-    else:
-        st.caption("No documents were retrieved for this question.")
-
-st.divider()
-
-st.markdown(
-    """
-<div style='text-align: center; margin-top: 40px;'>
-    <span style='font-size: 0.9rem; color: #bbbbbb;'>
-        ⚠️ This assistant does not provide professional medical advice.<br>
-        In emergencies, please call local emergency services immediately.
-    </span>
-</div>
-""",
-    unsafe_allow_html=True
-)
+    if has_asked:
+        if docs:
+            for i, d in enumerate(docs, start=1):
+                with st.expander(f"File {i} • score={d.get('score', 0):.4f}"):
+                    st.markdown(
+                        f"""
+                        <div class='doc-block'>
+                        <strong>Q:</strong> {d.get('q','')}<br><br>
+                        <strong>A:</strong> {d.get('a','')}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+        else:
+            st.caption("No retrieved knowledge source found.")
