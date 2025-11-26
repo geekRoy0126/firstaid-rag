@@ -11,105 +11,151 @@ st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layou
 chat_css = """
 <style>
 body {
-    background-color: #f2f6fb !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f5f8fc;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1a1d26;
+    margin: 0;
+    padding: 0;
 }
 
-/* Container improvements */
-#chat-container {
-    scroll-behavior: smooth;
-}
-
-/* Bubbles general */
+/* ===== CHAT BUBBLES ===== */
 .chat-bubble {
     padding: 14px 20px;
-    border-radius: 20px;
-    margin: 10px 0;
-    max-width: 75%;
-    line-height: 1.6;
-    font-size: 15.5px;
-    transition: transform 0.15s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    border-radius: 22px;
+    margin: 12px 0;
+    max-width: 70%;
+    line-height: 1.65;
+    font-size: 15.3px;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.045);
+    transition: transform 0.15s ease, box-shadow 0.22s ease;
 }
 
 .chat-bubble:hover {
-    transform: translateY(-1.5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1.6px);
+    box-shadow: 0 4px 13px rgba(0, 0, 0, 0.09);
 }
 
-/* User bubble */
+/* User messages */
 .user-bubble {
-    background-color: #dceafc;
-    color: #084298;
+    background-color: #d9e7fd;
+    color: #032b7a;
     margin-left: auto;
-    border: 1px solid #b6d4fe;
+    border: 1px solid #aac9f8;
+    font-weight: 500;
 }
 
-/* AI bubble */
+/* AI messages */
 .ai-bubble {
-    background-color: #e6f4ea;
-    color: #146c43;
+    background-color: #ffffff;
+    color: #1f2533;
     margin-right: auto;
-    border: 1px solid #a3cfbb;
+    border-left: 4px solid #e63946;
+    font-weight: 500;
+    font-size: 15.1px;
 }
 
-/* Title improvements */
+/* ===== RED CROSS TITLE ===== */
 .title {
     text-align: center;
-    margin-top: 32px;
-    font-size: 24px;
-    font-weight: 700;
+    margin-top: 26px;
+    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: 800;
     color: #c62a2a;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.4px;
 }
 
-/* Medical red pulse for first-aid visual vibe */
 .title::after {
-    content: '';
+    content: "✚";
     display: block;
-    width: 60px;
-    height: 4px;
-    background: #ff4d4d;
-    margin: 8px auto 0;
-    border-radius: 3px;
-    animation: pulse 1.8s infinite ease-in-out;
+    font-size: 36px;
+    color: #e63946;
+    margin-top: 6px;
+    animation: cross-pulse 1.6s infinite alternate ease-in-out;
 }
 
-@keyframes pulse {
-    0% { opacity: 0.5; transform: scaleX(0.9); }
-    50% { opacity: 1; transform: scaleX(1.1); }
-    100% { opacity: 0.5; transform: scaleX(0.9); }
+@keyframes cross-pulse {
+    0% { opacity: 0.55; transform: scale(0.92); }
+    100% { opacity: 1; transform: scale(1.18); }
 }
 
-/* Doc/reference block */
+/* ===== DOCUMENT BLOCK (RAG retrieved sources) ===== */
 .doc-block {
-    background: #ffffff;
-    padding: 14px;
-    border-radius: 14px;
-    border-left: 4px solid #ff6b6b;
-    margin-bottom: 10px;
-    color: #1a1a1a;
-    font-size: 14.4px;
-    box-shadow: 0 1.5px 5px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    padding: 15px;
+    border-radius: 13px;
+    border: 1px solid #f2dede;
+    border-left: 5px solid #e63946;
+    margin-bottom: 13px;
+    color: #2a2f3c;
+    font-size: 14.6px;
+    box-shadow: 0 1px 5px rgba(230,57,70,0.05);
 }
 
-/* Optional: alert-like block for first aid extracted docs */
 .doc-block::before {
-    content: '🩺 Reference';
+    content: "🧰 Medical Source Extract";
     display: block;
-    font-weight: 600;
-    font-size: 13px;
-    color: #d32f2f;
-    margin-bottom: 6px;
+    font-weight: 700;
+    font-size: 13.2px;
+    color: #b71c1c;
+    margin-bottom: 7px;
 }
 
-/* Rounded code blocks inside bubbles */
-.chat-bubble code {
-    background: rgba(0,0,0,0.04);
-    padding: 3px 6px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+/* ===== LOADING ELEMENT (for LLM thinking) ===== */
+.loading-cross {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: #e63946;
+    animation: cross-loader 1.1s infinite alternate ease-in-out;
+}
+
+@keyframes cross-loader {
+    0% { opacity: 0.4; transform: scale(0.9) rotate(-6deg); }
+    100% { opacity: 1; transform: scale(1.22) rotate(6deg); }
+}
+
+/* ===== EMERGENCY ALERT BLOCK ===== */
+.emergency-block {
+    background: #ffecec;
+    border-left: 6px solid #d32f2f;
+    padding: 12px 17px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #8b0000;
+    margin: 14px auto;
+    width: 82%;
+    box-shadow: 0 2px 9px rgba(211, 47, 47, 0.11);
+    animation: alert-flash 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes alert-flash {
+    0% { box-shadow: 0 0 6px rgba(255,80,80,0.25); }
+    100% { box-shadow: 0 0 15px rgba(255,40,40,0.38); }
+}
+
+/* ===== KEY MEDICAL ACTION HIGHLIGHT ===== */
+.action-highlight {
+    background: #e63946;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: inline-block;
+    color: white;
+    font-weight: 700;
+    font-size: 14.8px;
+}
+
+/* ===== SCROLLBAR (minimal + medical tone) ===== */
+::-webkit-scrollbar {
+    width: 7px;
+}
+::-webkit-scrollbar-thumb {
+    background: #e63946;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+    background: #eef2f8;
 }
 </style>
 """
