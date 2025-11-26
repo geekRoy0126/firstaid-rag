@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = 'https://gardening-sie-canyon-moving.trycloudflare.com/ask'
+API_URL = "http://host.docker.internal:8000/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="🚑", layout="centered")
 
@@ -68,12 +68,38 @@ for msg in st.session_state.messages:
     st.markdown(f"<div class='chat-bubble {bubble_class}'>{msg['content']}</div>", unsafe_allow_html=True)
 
 # ------------------ 输入栏 ------------------
-question = st.text_area("Your question:", height=80)
+# ================== 输入框初始化与清空逻辑 ==================
 
-if st.button("Ask"):
+# 初始化 question_box（输入框的 state）
+if "question_box" not in st.session_state:
+    st.session_state.question_box = ""
+
+# 初始化 clear_question（是否在下次 rerun 清空输入框）
+if "clear_question" not in st.session_state:
+    st.session_state.clear_question = False
+
+# 如果上一轮设置了需要清空 → 在渲染控件之前清空输入框
+if st.session_state.clear_question:
+    st.session_state.question_box = ""      # 清空输入框内容
+    st.session_state.clear_question = False # 重置开关
+
+#( so Ctrl+Enter works)
+with st.form("qa_form"):
+    question = st.text_area(
+        "Your question:",
+        height=80,
+        key="question_box"
+    )
+    submitted = st.form_submit_button("Ask")   # Ctrl+Enter 会触发这里
+
+# ---- When user submits ----
+if submitted:
     if not question.strip():
         st.warning("Please enter a question.")
     else:
+        # 下一轮 rerun 前清空输入框
+        st.session_state.clear_question = True
+
         # 用户消息
         st.session_state.messages.append({"role": "user", "content": question})
 
@@ -98,11 +124,12 @@ if st.button("Ask"):
 st.subheader("📚 Retrieved Documents")
 
 docs = st.session_state.get("docs", None)
-if not docs:
-    st.caption("No documents were retrieved yet. Ask a question to see matches here.")
-else:
+has_asked = st.session_state.get("has_asked", False)
+
+if docs:
+    # 有检索结果：正常展示
     for i, d in enumerate(docs, start=1):
-        with st.expander(f"Document {i}  •  score={d['score']:.4f}"):
+        with st.expander(f"Document {i} • score={d.get('score', 0):.4f}"):
             st.markdown(
                 f"""
                 <div class='doc-block'>
@@ -111,7 +138,20 @@ else:
                 </div>
                 """,
                 unsafe_allow_html=True,
-
             )
 
+elif not has_asked:
+    # 还没问过任何问题：显示提示
+    st.caption("No documents were retrieved yet. Ask a question to see matches here.")
 
+
+st.divider()
+st.markdown(
+    """
+<span style='font-size: 0.85rem; color: #999;'>
+⚠️ This assistant does not provide professional medical advice.<br>
+In emergencies, call local emergency services immediately.
+</span>
+""",
+    unsafe_allow_html=True
+)
