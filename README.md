@@ -1,98 +1,119 @@
-## 🔧 Software Versions and Their Purposes
-
-This project relies on a collection of modern machine learning, retrieval, and web technologies.  
-Below are the core software components, their specific versions, and their roles in the system.
-
----
-
-### **1. Python 3.10**
-- **Role:** Primary development language  
-- **Purpose:** Ensures compatibility with major ML libraries (FAISS, Transformers, FastAPI, Streamlit)
+# 🚑 First Aid RAG Assistant
+A lightweight Retrieval-Augmented Generation (RAG) system that provides **reliable, evidence-grounded first-aid guidance**.  
+The system integrates **Sentence-Transformers, FAISS, Qwen3, FastAPI, Streamlit**, and **Docker** for full local reproducibility.
 
 ---
 
-### **2. Sentence-Transformers 2.6.1**
-- **Role:** Dense embedding generation  
-- **Purpose:** Converts first-aid instructions and user queries into 768-d semantic vectors for retrieval.
+## 📌 Features
+- 🔍 Dense Retrieval (FAISS + Embeddings)
+- 🤖 Local Qwen3 LLM generation
+- 🧩 PAL-style grounded reasoning
+- ⚙️ Automated dataset download, embedding, and index construction
+- 💬 Streamlit-based chat UI
+- 📦 Full Docker containerization
 
 ---
 
-### **3. FAISS 1.7.4**
-- **Role:** Vector similarity search engine  
-- **Purpose:** Performs fast top-k nearest neighbor retrieval over embedding space  
-- Enables sub-millisecond search even with large corpora.
+## 🧱 Tech Stack (with Versions)
+| Component | Version | Purpose |
+|----------|---------|---------|
+| Python | 3.10 | Core development language |
+| Sentence-Transformers | 2.6.1 | Embedding of documents & queries |
+| FAISS | 1.7.4 | Vector similarity search |
+| Qwen3 (8B gguf) | — | Local LLM inference |
+| FastAPI | 0.110+ | Backend inference server |
+| Uvicorn | 0.29+ | ASGI server |
+| Streamlit | 1.33+ | Front-end chat UI |
+| HuggingFace Datasets | 2.18+ | Dataset loading & preprocessing |
 
 ---
 
-### **4. Qwen3 (8B, gguf version)**
-- **Role:** Local Large Language Model  
-- **Purpose:** Generates grounded responses using retrieved evidence  
-- Runs locally for determinism, reproducibility, and safety-critical reliability.
+## 📚 Dataset
+Uses the **FirstAidInstructionsDataset** (~120k procedural units):  
+https://huggingface.co/datasets/lextale/FirstAidInstructionsDataset
 
 ---
 
-### **5. FastAPI 0.110+**
-- **Role:** Backend inference server  
-- **Purpose:**  
-  - Hosts the `/ask` endpoint  
-  - Orchestrates embedding → retrieval → generation  
-  - Enables stateless, reproducible pipeline execution.
+## 🚀 Quick Start
+
+### 1. Clone
+```bash
+git clone https://github.com/geekRoy0126/firstaid-rag
+cd firstaid-rag
+```
+
+### 2. Run with Docker (recommended)
+```bash
+docker build -t firstaid-rag .
+docker run -p 8000:8000 firstaid-rag
+```
+
+API available at:
+```
+http://localhost:8000
+```
+
+### 3. Start Streamlit UI
+```bash
+streamlit run streamlit/app.py
+```
+
+UI loads at:
+```
+http://localhost:8501
+```
 
 ---
 
-### **6. Uvicorn 0.29+**
-- **Role:** ASGI web server for FastAPI  
-- **Purpose:** Provides high-performance async inference and API routing.
+## 📡 API Usage
+
+### POST `/ask`
+**Request**
+```json
+{
+  "question": "What should I do for a minor burn?"
+}
+```
+
+**Response**
+```json
+{
+  "answer": "... grounded instructions ...",
+  "retrieved_docs": [...]
+}
+```
 
 ---
 
-### **7. Streamlit 1.33+**
-- **Role:** Front-end user interface  
-- **Purpose:**  
-  - Implements a real-time chat UI  
-  - Displays retrieved evidence + model responses  
-  - Supports local experimentation and demonstration.
+## 📁 Project Structure
+```
+firstaid-rag/
+│ app.py                # FastAPI backend
+│ build_index.py        # Build FAISS index + embed corpus
+│ Dockerfile
+│ requirements.txt
+│ data/                 # Auto-generated corpus + FAISS index
+└ streamlit/
+  └ app.py              # Chat UI
+```
 
 ---
 
-### **8. Docker 24+**
-- **Role:** Full containerization of the system  
-- **Purpose:**  
-  - Guarantees reproducible environments for TAs and instructors  
-  - Automates dataset download, embedding, FAISS indexing, and model startup  
-  - Makes the system deployable across any OS.
+## 🔧 Notes on Reproducibility
+- Fully containerized via Docker
+- Startup script handles:
+  - dataset download
+  - embedding generation
+  - FAISS index construction
+- Ensures deterministic execution across environments
 
 ---
 
-### **9. HuggingFace Datasets 2.18+**
-- **Role:** Dataset loading & preprocessing  
-- **Purpose:**  
-  - Downloads the *FirstAidInstructionsDataset*  
-  - Standardized interface for text datasets  
-  - Ensures compatibility with vectorization pipeline.
-
----
-
-### **10. Transformers 4.40+**
-- **Role:** Model loading and tokenization  
-- **Purpose:**  
-  - Provides tokenizer + model utilities  
-  - Ensures compatibility with Qwen3 local inference.
-
----
-
-### **11. numpy 1.26+**
-- **Role:** Embedding & vector operations  
-- **Purpose:** Fundamental numerical operations for FAISS & preprocessing.
-
----
-
-## 📌 Why These Versions Matter
-
-- Ensures reproducibility across environments  
-- Matches FAISS & Sentence-Transformers compatible versions  
-- Prevents API incompatibilities with FastAPI / Streamlit  
-- Guarantees stable local inference with Qwen3  
-- Meets the course requirement for reliable, reproducible LLM systems  
+## 🧭 Future Improvements
+- Add multimodal input (image-based wound analysis)
+- Integrate cross-encoder re-ranking (ColBERT)
+- Add uncertainty estimation / confidence scores
+- Expand to multilingual first-aid datasets
+- Optional fine-tuning of Qwen3 for medical reasoning
 
 ---
