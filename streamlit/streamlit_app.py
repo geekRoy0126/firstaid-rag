@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = " https://stored-yale-expectations-bangkok.trycloudflare.com/ask"
+API_URL = "https://trans-telephone-plane-folder.trycloudflare.com/ask"
 
 st.set_page_config(page_title="First Aid RAG Assistant", page_icon="✚", layout="wide")
 st.markdown("<h1 class='title'>🚑 First Aid RAG Assistant</h1>", unsafe_allow_html=True)
